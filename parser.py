@@ -122,6 +122,26 @@ def validate_code(tokens: list[str]) -> None:
         _validate_expression(tokens)
 
 
+def split_code(tokens: list[str]) -> tuple[str | None, list[str]]:
+    """Split a validated token list into (target_variable, expression_tokens).
+    The target is None when the code is a bare expression."""
+    if "=" in tokens:
+        eq = tokens.index("=")
+        return tokens[0], tokens[eq + 1:]
+    return None, tokens
+
+
+def collect_variables(tokens: list[str]) -> list[str]:
+    """Return the variable names in a token list, in order of first
+    appearance, without duplicates."""
+    seen: list[str] = []
+    for tok in tokens:
+        if tok not in OPERATORS and tok not in "()=" and _is_variable(tok):
+            if tok not in seen:
+                seen.append(tok)
+    return seen
+
+
 def infix_to_postfix(tokens: list[str]) -> list[str]:
     """Convert an expression token list to postfix via Shunting Yard.
     If the tokens form an assignment, the assignment is stripped and
