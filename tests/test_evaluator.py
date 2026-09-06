@@ -2,8 +2,13 @@
 Tests for evaluator.py and processor_interface.py: evaluation, variable
 state, and the three error kinds required by the specification.
 
-Run directly:  python test_evaluator.py
+Run directly:  python tests/test_evaluator.py
 """
+
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from parser import tokenize, validate_code, infix_to_postfix, split_code
 from evaluator import VariableStore, evaluate_postfix

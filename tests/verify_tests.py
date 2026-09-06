@@ -6,6 +6,12 @@ computed BY HAND (independently of the program code) and compared against
 the exact output of processor_interface.process_input().
 """
 
+import os
+import sys
+
+_TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(_TESTS_DIR))
+
 from processor_interface import process_input
 
 SEP = "-" * 43
@@ -149,7 +155,7 @@ CASES = {
 def main():
     failures = 0
     for filename, expected in CASES.items():
-        with open(filename, encoding="utf-8") as f:
+        with open(os.path.join(_TESTS_DIR, filename), encoding="utf-8") as f:
             lines = f.read().splitlines()
         actual = process_input(lines)
         if actual == expected:

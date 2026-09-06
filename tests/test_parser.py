@@ -1,9 +1,14 @@
 """
 Tests for parser.py: tokenize, validate_code, infix_to_postfix.
 
-Run directly:  python test_parser.py
-Or with pytest: pytest test_parser.py
+Run directly:  python tests/test_parser.py
+Or with pytest: pytest tests/test_parser.py
 """
+
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from parser import tokenize, validate_code, infix_to_postfix
 

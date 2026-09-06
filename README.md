@@ -2,7 +2,6 @@
 
 A Python GUI application that processes simple assignment statements and expressions.
 
-
 ## Program Description
 
 The program reads a sequence of input codes, converts the expression part of each
@@ -21,6 +20,7 @@ Input codes are either typed into the input text area or loaded from an external
 Tkinter, which ships with the standard library, so nothing needs to be installed.
 
 ### Supported input
+
 - Assignment statements (`x = 5`) or bare expressions (`a + b`), one per line.
 - Operators: `+ - * / %`, with parentheses. Precedence: `* / %` > `+ -`,
   equal precedence associates to the left.
@@ -31,15 +31,14 @@ Tkinter, which ships with the standard library, so nothing needs to be installed
 
 ### Errors detected
 
-| Error | Meaning | Effect |
-|---|---|---|
-| `Invalid input code` | The line is not a well-formed statement or expression | The line produces no value |
-| `Undefined variable <name>` | The variable had no value before this code | The line produces no value |
-| `Division by zero` | The right operand of `/` or `%` evaluated to zero | The line produces no value; if it was a statement, the target variable keeps the value it had before |
+| Error                       | Meaning                                               | Effect                                                                                               |
+| --------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `Invalid input code`        | The line is not a well-formed statement or expression | The line produces no value                                                                           |
+| `Undefined variable <name>` | The variable had no value before this code            | The line produces no value                                                                           |
+| `Division by zero`          | The right operand of `/` or `%` evaluated to zero     | The line produces no value; if it was a statement, the target variable keeps the value it had before |
 
 A bad line never stops the run — it is reported and processing continues with the
 next line.
-
 
 ## Output Format
 
@@ -98,7 +97,6 @@ Line 4: Division by zero
 Line 6: Undefined variable c
 ```
 
-
 ## Modules and Functions
 
 The program follows a structured, layered design. Each module has one
@@ -110,11 +108,14 @@ main.py  ->  gui.py  ->  processor_interface.py  ->  parser.py
                                                  ->  evaluator.py
 ```
 
+The program source files sit in the project root; the test suite lives in
+`tests/` and is not needed to run the program.
+
 ### `main.py` — entry point
 
-| Function | Description |
-|---|---|
-| *(module body)* | Imports `run` from `gui` and calls it when the file is executed directly. Keeps the launch point separate from the interface code. |
+| Function        | Description                                                                                                                        |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| _(module body)_ | Imports `run` from `gui` and calls it when the file is executed directly. Keeps the launch point separate from the interface code. |
 
 ### `gui.py` — user interface
 
@@ -122,75 +123,81 @@ Builds the window and handles every user interaction. It performs no parsing or
 evaluation of its own; it only passes the input lines down and displays the
 string it gets back.
 
-| Function / method | Description |
-|---|---|
-| `class App(tk.Tk)` | The main application window. Two panels side by side, each with a text area and a button below it. |
-| `App._build_left_panel()` | Creates the `Input lines:` caption, the editable input text area with its scrollbar, and the **Load File** button. |
-| `App._build_right_panel()` | Creates the read-only output text area with its scrollbar and the **Process** button. |
-| `App._on_input_change()` | Enables the **Process** button when the input text area holds non-whitespace text and disables it otherwise. |
-| `App._watch_input()` | Re-checks the input area every 200 ms so the **Process** button stays correct however the text arrived — typing, a menu paste or a drag and drop. |
-| `App.on_load_file()` | Opens a file dialog over any directory, rejects any file whose extension is not `.in`, reads the file, and replaces the whole content of the input text area. Read failures are reported in a message box. |
-| `App.on_process()` | Reads the input area, refuses to run when it is empty, splits it into lines, calls `process_input`, and replaces the whole content of the output text area. |
-| `run()` | Instantiates `App` and enters the Tkinter main loop, so the program stays open until the user closes the window. |
+| Function / method          | Description                                                                                                                                                                                                |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `class App(tk.Tk)`         | The main application window. Two panels side by side, each with a text area and a button below it.                                                                                                         |
+| `App._build_left_panel()`  | Creates the `Input lines:` caption, the editable input text area with its scrollbar, and the **Load File** button.                                                                                         |
+| `App._build_right_panel()` | Creates the read-only output text area with its scrollbar and the **Process** button.                                                                                                                      |
+| `App._on_input_change()`   | Enables the **Process** button when the input text area holds non-whitespace text and disables it otherwise.                                                                                               |
+| `App._watch_input()`       | Re-checks the input area every 200 ms so the **Process** button stays correct however the text arrived — typing, a menu paste or a drag and drop.                                                          |
+| `App.on_load_file()`       | Opens a file dialog over any directory, rejects any file whose extension is not `.in`, reads the file, and replaces the whole content of the input text area. Read failures are reported in a message box. |
+| `App.on_process()`         | Reads the input area, refuses to run when it is empty, splits it into lines, calls `process_input`, and replaces the whole content of the output text area.                                                |
+| `run()`                    | Instantiates `App` and enters the Tkinter main loop, so the program stays open until the user closes the window.                                                                                           |
 
 ### `processor_interface.py` — orchestration
 
 Drives one full pass over the input and assembles the output text. This is the
 only module where the parser and the evaluator meet.
 
-| Function | Description |
-|---|---|
-| `process_input(lines)` | Processes every non-empty line in order against one shared `VariableStore` and returns the complete output string. Collects the per-line blocks, the final variable values, and the error list, then joins the three sets with blank lines. |
-| `_parse_line(line, store)` | Tokenizes, validates and converts one code to postfix. Registers every variable of the line with the store so it appears under *Variables used* even if evaluation later fails. Returns `(target, postfix_tokens)`. |
-| `_evaluate_line(target, postfix, store)` | Evaluates the postfix tokens and, for a statement, stores the value in the target variable. Because a failure raises before the store is written, a failed statement leaves its target at its previous value. |
-| `_format_postfix(target, postfix)` | Renders the postfix notation of the whole code, keeping the `var =` prefix in front of the converted expression for a statement. |
-| `_format_result(target, value)` | Renders the given code with its expression part replaced by the resulting value: `z = 11` for a statement, `11` for a bare expression. |
+| Function                                 | Description                                                                                                                                                                                                                                 |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `process_input(lines)`                   | Processes every non-empty line in order against one shared `VariableStore` and returns the complete output string. Collects the per-line blocks, the final variable values, and the error list, then joins the three sets with blank lines. |
+| `_parse_line(line, store)`               | Tokenizes, validates and converts one code to postfix. Registers every variable of the line with the store so it appears under _Variables used_ even if evaluation later fails. Returns `(target, postfix_tokens)`.                         |
+| `_evaluate_line(target, postfix, store)` | Evaluates the postfix tokens and, for a statement, stores the value in the target variable. Because a failure raises before the store is written, a failed statement leaves its target at its previous value.                               |
+| `_format_postfix(target, postfix)`       | Renders the postfix notation of the whole code, keeping the `var =` prefix in front of the converted expression for a statement.                                                                                                            |
+| `_format_result(target, value)`          | Renders the given code with its expression part replaced by the resulting value: `z = 11` for a statement, `11` for a bare expression.                                                                                                      |
 
 ### `parser.py` — lexical and syntactic analysis
 
 Turns raw text into validated tokens and converts infix to postfix. It knows
 nothing about variable values.
 
-| Function | Description |
-|---|---|
-| `tokenize(line)` | Breaks a raw line into tokens: variable names, integer literals, operators, `=` and parentheses. Whitespace is skipped. Raises `ValueError("Invalid input code")` on an illegal character, on a name containing an underscore, and on a number immediately followed by a letter such as `1abc`. |
-| `validate_code(tokens)` | Accepts either `var = expression`, requiring exactly one `=` with a single valid variable on its left, or a bare expression. Raises `ValueError("Invalid input code")` otherwise. |
-| `_validate_expression(tokens)` | Scans the expression tokens tracking whether an operand or an operator is expected next, and tracking parenthesis depth. Catches consecutive operators, a missing operator between operands, a dangling operator, empty parentheses, and unbalanced parentheses. |
-| `split_code(tokens)` | Splits a validated token list into `(target_variable, expression_tokens)`. The target is `None` for a bare expression. |
-| `collect_variables(tokens)` | Returns the variable names in a token list in order of first appearance, without duplicates. |
-| `infix_to_postfix(tokens)` | Converts an expression to postfix using the shunting-yard algorithm. |
-| `_is_number` / `_is_variable` | Token classification helpers. |
-| `_invalid()` | Raises the single `ValueError("Invalid input code")` used throughout the module. |
+| Function                       | Description                                                                                                                                                                                                                                                                                     |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tokenize(line)`               | Breaks a raw line into tokens: variable names, integer literals, operators, `=` and parentheses. Whitespace is skipped. Raises `ValueError("Invalid input code")` on an illegal character, on a name containing an underscore, and on a number immediately followed by a letter such as `1abc`. |
+| `validate_code(tokens)`        | Accepts either `var = expression`, requiring exactly one `=` with a single valid variable on its left, or a bare expression. Raises `ValueError("Invalid input code")` otherwise.                                                                                                               |
+| `_validate_expression(tokens)` | Scans the expression tokens tracking whether an operand or an operator is expected next, and tracking parenthesis depth. Catches consecutive operators, a missing operator between operands, a dangling operator, empty parentheses, and unbalanced parentheses.                                |
+| `split_code(tokens)`           | Splits a validated token list into `(target_variable, expression_tokens)`. The target is `None` for a bare expression.                                                                                                                                                                          |
+| `collect_variables(tokens)`    | Returns the variable names in a token list in order of first appearance, without duplicates.                                                                                                                                                                                                    |
+| `infix_to_postfix(tokens)`     | Converts an expression to postfix using the shunting-yard algorithm.                                                                                                                                                                                                                            |
+| `_is_number` / `_is_variable`  | Token classification helpers.                                                                                                                                                                                                                                                                   |
+| `_invalid()`                   | Raises the single `ValueError("Invalid input code")` used throughout the module.                                                                                                                                                                                                                |
 
 ### `evaluator.py` — evaluation and variable state
 
 Computes values from postfix tokens and remembers what each variable holds.
 
-| Class / function | Description |
-|---|---|
-| `class VariableStore` | Holds the most recently assigned value of every variable, in order of first appearance in the input. |
-| `VariableStore.note_used(name)` | Records that a variable appeared in the input even if it never receives a value, so it still shows up under *Variables used*. |
-| `VariableStore.get(name)` | Returns the current value, or raises `ValueError("Undefined variable <name>")` when the variable has never been assigned. |
-| `VariableStore.set(name, value)` | Stores a new value, replacing any previous one. |
-| `VariableStore.is_defined(name)` | Reports whether the variable currently holds a value. |
-| `VariableStore.list_final_values()` | Returns the `name = value` lines for the *Variables used* set, marking never-assigned variables as `(undefined)`. |
-| `evaluate_postfix(tokens, store)` | Evaluates postfix tokens with an operand stack: literals and variable values are pushed, an operator pops two operands and pushes the result. Returns the single remaining value. |
-| `_apply(operator, left, right)` | Applies one binary operator to two integers. |
-| `_c_divide(left, right)` | Integer division truncated toward zero; raises `ValueError("Division by zero")` when the divisor is zero. |
-| `_c_modulo(left, right)` | Remainder consistent with `_c_divide`; raises the same error on a zero divisor. |
+| Class / function                    | Description                                                                                                                                                                       |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `class VariableStore`               | Holds the most recently assigned value of every variable, in order of first appearance in the input.                                                                              |
+| `VariableStore.note_used(name)`     | Records that a variable appeared in the input even if it never receives a value, so it still shows up under _Variables used_.                                                     |
+| `VariableStore.get(name)`           | Returns the current value, or raises `ValueError("Undefined variable <name>")` when the variable has never been assigned.                                                         |
+| `VariableStore.set(name, value)`    | Stores a new value, replacing any previous one.                                                                                                                                   |
+| `VariableStore.is_defined(name)`    | Reports whether the variable currently holds a value.                                                                                                                             |
+| `VariableStore.list_final_values()` | Returns the `name = value` lines for the _Variables used_ set, marking never-assigned variables as `(undefined)`.                                                                 |
+| `evaluate_postfix(tokens, store)`   | Evaluates postfix tokens with an operand stack: literals and variable values are pushed, an operator pops two operands and pushes the result. Returns the single remaining value. |
+| `_apply(operator, left, right)`     | Applies one binary operator to two integers.                                                                                                                                      |
+| `_c_divide(left, right)`            | Integer division truncated toward zero; raises `ValueError("Division by zero")` when the divisor is zero.                                                                         |
+| `_c_modulo(left, right)`            | Remainder consistent with `_c_divide`; raises the same error on a zero divisor.                                                                                                   |
 
 ### Supporting files
 
-| File | Description |
-|---|---|
-| `test_parser.py` | Covers tokenizing, validation and conversion: precedence, associativity, parentheses, malformed syntax, illegal characters and invalid variable names. |
-| `test_evaluator.py` | Covers arithmetic, C division and modulo semantics, most-recent-value lookup, all three error kinds, retention of a target variable's previous value after a division by zero, and the output format. |
-| `sample.in` | A sample input file exercising assignments, a complex expression, a division by zero and an undefined variable. |
+All tests live in the `tests/` directory; the program source stays flat in the
+project root, so the executable package is untouched.
 
+| File                      | Description                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/test_parser.py`    | Covers tokenizing, validation and conversion: precedence, associativity, parentheses, malformed syntax, illegal characters and invalid variable names.                                                                                                                                                                                                                     |
+| `tests/test_evaluator.py` | Covers arithmetic, C division and modulo semantics, most-recent-value lookup, all three error kinds, retention of a target variable's previous value after a division by zero, and the output format.                                                                                                                                                                      |
+| `tests/verify_tests.py`   | End-to-end harness: runs the full pipeline over the seven `tests/test_*.in` scenario files and compares the complete output against hand-computed expected results (postfix strings, values, variable tables, error lists).                                                                                                                                                |
+| `tests/test_*.in`         | Seven scenario inputs: `test_simple.in` (basic expressions), `test_precedence.in` (precedence and associativity), `test_variables.in` (variable reuse and most-recent values), `test_invalid.in` (malformed codes), `test_undefined.in` (unassigned variables), `test_divzero.in` (division by zero and value retention) and `test_mixed.in` (parentheses and a full mix). |
+| `sample.in`               | A sample input file exercising assignments, a complex expression, a division by zero and an undefined variable.                                                                                                                                                                                                                                                            |
+| `CMSC129_PE00.pyz`        | Packaged executable (Python zipapp), equivalent to a JAR file. Run with `python3 CMSC129_PE00.pyz`.                                                                                                                                                                                                                                                                        |
 
 ## Control Flow
 
 ### Program startup
+
 1. The user runs `main.py` (or the packaged executable).
 2. `main.py` calls `gui.run()`.
 3. `run()` builds the `App` window: input text area with **Load File**, output
@@ -200,6 +207,7 @@ Computes values from postfix tokens and remembers what each variable holds.
    files and process input any number of times, until the window is closed.
 
 ### Loading an input file
+
 1. The user clicks **Load File**.
 2. A file dialog opens, able to reach any directory on the computer.
 3. If the user cancels, nothing changes.
@@ -213,6 +221,7 @@ The user may instead type or edit codes directly in the input text area, with th
 same effect on the **Process** button.
 
 ### Processing the input
+
 1. The user clicks **Process**. The button is only active when the input area
    holds non-whitespace text.
 2. `on_process()` splits the input area into lines and calls `process_input`.
@@ -233,13 +242,14 @@ same effect on the **Process** button.
       number and the block's `Result:` reports the error instead of a value. The
       postfix line is still shown whenever the conversion itself succeeded, as in
       `a = z 0 /` for a division by zero.
-5. After the last line, `list_final_values()` produces the *Variables used* set.
+5. After the last line, `list_final_values()` produces the _Variables used_ set.
 6. The three sets — the per-line blocks, the variables, the errors — are joined
    with blank lines between them.
 7. `on_process()` replaces everything in the output text area with that string.
    The output area is read-only, so the user cannot alter it.
 
 ### Error handling
+
 A `ValueError` from any stage is caught once, in the per-line loop of
 `process_input`. This keeps the failure local: the line is reported as an error
 and processing continues with the next line. Because the exception propagates out
@@ -247,26 +257,30 @@ of the evaluation before the store is written, a statement that fails leaves its
 target variable exactly as it was — which is what the specification requires for
 a division by zero.
 
-
 ## Usage
+
 ```bash
 python main.py
 ```
+
 Requires Python 3.10 or newer. Tkinter is part of the standard library, so no
 packages need to be installed.
 
-
 ## Testing
+
 ```bash
-python test_parser.py
-python test_evaluator.py
+python3 tests/test_parser.py
+python3 tests/test_evaluator.py
+python3 tests/verify_tests.py
 ```
 
+The test scripts locate the program modules themselves, so they run from any
+directory.
 
 ## Work Distribution
 
-| Member | Responsibilities |
-|---|---|
-| Jomuad | |
-| Ojanola | |
-| Taclindo | |
+| Member   | Responsibilities                                                                                                                                                                                                                                                                                                                                             |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Ojanola  | **GUI & File I/O Module.** Designed and implemented the graphical user interface (input text area, output text area, Load File and Process buttons), the file loading logic (`.in` files from any directory, overwriting the input text area), the input validation for the Process button, and all user interaction flows and window lifecycle.             |
+| Jomuad   | **Parser & Infix-to-Postfix Converter.** Implemented the tokenizer that breaks expressions into tokens (variables, values, operators), the shunting-yard algorithm that converts infix to postfix with the correct operator precedence, and the detection of Invalid Input errors (malformed expressions, illegal characters, invalid variable names).       |
+| Taclindo | **Evaluator, Variable Manager & Output Formatter.** Implemented the stack-based postfix evaluation, the variable storage system that keeps each variable's most recent value, the detection of Undefined Variable and Division by Zero errors, and the output formatting (per-line `Postfix:`/`Result:` blocks, the final variable list and the error list). |
