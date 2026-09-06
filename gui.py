@@ -7,6 +7,7 @@ Calls processor_interface.process_input(lines) and displays
 whatever string comes back.
 """
 
+import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
@@ -38,6 +39,7 @@ class App(tk.Tk):
 
         self._build_left_panel()
         self._build_right_panel()
+        self._watch_input()
 
     # ------------------------------------------------------------------
     # Layout
@@ -84,6 +86,10 @@ class App(tk.Tk):
         self.input_text.grid(row=1, column=0, sticky="nsew", padx=2, pady=(0, 6))
         self.input_text.bind("<KeyRelease>", self._on_input_change)
 
+        input_scroll = tk.Scrollbar(input_box, command=self.input_text.yview)
+        input_scroll.grid(row=1, column=1, sticky="ns", pady=(0, 6))
+        self.input_text.config(yscrollcommand=input_scroll.set)
+
         # Load File button
         self.load_button = tk.Button(
             left,
@@ -122,7 +128,7 @@ class App(tk.Tk):
             bg=COLOR_PANEL_BG,
             fg=COLOR_TEXT,
             font=(FONT_FAMILY, FONT_SIZE),
-            wrap="word",
+            wrap="none",
             bd=0,
             highlightthickness=0,
             padx=10,
@@ -130,6 +136,10 @@ class App(tk.Tk):
             state="disabled",  # read-only
         )
         self.output_text.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+
+        output_scroll = tk.Scrollbar(output_box, command=self.output_text.yview)
+        output_scroll.grid(row=0, column=1, sticky="ns", pady=2)
+        self.output_text.config(yscrollcommand=output_scroll.set)
 
         # Process button
         self.process_button = tk.Button(
@@ -156,12 +166,27 @@ class App(tk.Tk):
         has_content = bool(self.input_text.get("1.0", tk.END).strip())
         self.process_button.config(state="normal" if has_content else "disabled")
 
+    def _watch_input(self):
+        """Keep the Process button in sync with the input area no matter
+        how the text got there (typing, menu paste, drag and drop)."""
+        self._on_input_change()
+        self.after(200, self._watch_input)
+
     def on_load_file(self):
         filepath = filedialog.askopenfilename(
             title="Load input file",
+            defaultextension=".in",
             filetypes=[("Input files", "*.in")],
         )
         if not filepath:
+            return
+
+        # The dialog filter is only a hint; the extension is the rule.
+        if os.path.splitext(filepath)[1].lower() != ".in":
+            messagebox.showerror(
+                "Invalid file type",
+                "Only input files with the .in extension can be loaded.",
+            )
             return
 
         try:
