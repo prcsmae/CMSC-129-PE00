@@ -1,0 +1,9 @@
+x = 5
+y = 10
+z = x + y
+a = 100
+b = a - 25
+c = b * 2
+d = c / 5
+e = 17 % 5
+result = x + y * z

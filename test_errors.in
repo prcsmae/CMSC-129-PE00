@@ -1,0 +1,9 @@
+x = 5
+y = x + z
+a = 10 / 0
+b = 5 + * 3
+c = 2 + + 2
+d = @#$ + 5
+e = 10 / (5 - 5)
+f = 2 * undefinedVar + 3
+result = valid + invalid
